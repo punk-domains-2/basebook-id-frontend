@@ -15,12 +15,12 @@
 
           <div class="navbar-menu-buttons">
             <a 
-              class="btn btn-primary mx-2 navbar-menu-btn" 
+              class="btn btn-primary me-3 navbar-menu-btn" 
               href="https://opensea.io/collection/basebook" 
               target="_blank"
             >Marketplace</a>
 
-            <div v-if="isActivated" class="btn-group mx-2 navbar-menu-btn">
+            <div v-if="isActivated" class="btn-group me-3 navbar-menu-btn">
               <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                 {{getNetworkName}}
               </button>
@@ -36,7 +36,7 @@
               </ul>
             </div>
 
-            <div v-if="isActivated" class="btn-group mx-2 navbar-menu-btn">
+            <div v-if="isActivated" class="btn-group me-3 navbar-menu-btn">
               <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ getNameOrAddress }}
               </button>
@@ -54,9 +54,15 @@
 
             <button v-if="!isActivated" class="btn btn-primary navbar-menu-btn" data-bs-toggle="modal" data-bs-target="#connectModal">Connect wallet</button>
 
-            <div v-if="isActivated" class="btn-group mx-2 navbar-menu-btn">
+            <div v-if="isActivated" class="btn-group me-3 navbar-menu-btn">
               <router-link tag="button" class="btn btn-primary" to="/send-tokens">Send Tokens</router-link>
             </div>
+
+            <a 
+              class="btn btn-primary me-3 navbar-menu-btn" 
+              href="https://basebook.xyz" 
+              target="_blank"
+            >Chat</a>
           </div>
         </div>
 

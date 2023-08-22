@@ -23,7 +23,7 @@ export default {
     minterTldPrice2: 1,
     minterTldPrice3: 0.1,
     minterTldPrice4: 0.009,
-    minterTldPrice5: 0.002,
+    minterTldPrice5: 0.005,
     referralFee: 1000
   }),
 

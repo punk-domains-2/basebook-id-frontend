@@ -15,15 +15,15 @@ export default {
     tldContract: null,
     tldChainId: 8453,
     tldChainName: "Base",
-    minterAddress: "0x7e8aB50697C7Abe63Bdab6B155C2FB8D285458cB", // TODO
+    minterAddress: "0xAf6BeC6B2D21A9C6b36Ed67aFD79dBc523646CB6", // TODO
     minterContract: null,
     minterLoadingData: false,
     minterPaused: true,
-    minterTldPrice1: 2,
-    minterTldPrice2: 1,
-    minterTldPrice3: 0.1,
-    minterTldPrice4: 0.009,
-    minterTldPrice5: 0.005,
+    minterTldPrice1: 1.337,
+    minterTldPrice2: 0.420,
+    minterTldPrice3: 0.069,
+    minterTldPrice4: 0.008,
+    minterTldPrice5: 0.004,
     referralFee: 1000
   }),
 

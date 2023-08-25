@@ -7,6 +7,9 @@
     <router-link v-if="isActivated && isNetworkSupported" to="/send-tokens">Send Tokens</router-link>
     <span v-if="isActivated && isNetworkSupported"> | </span>
 
+    <router-link v-if="isActivated && isNetworkSupported" to="/free-domain">Free Domain</router-link>
+    <span v-if="isActivated && isNetworkSupported"> | </span>
+
     <router-link v-if="isUserMinterAdmin || isUserRoyaltyFeeUpdater || isUserTldAdmin" to="/admin">Admin</router-link>
     <span v-if="isUserMinterAdmin || isUserRoyaltyFeeUpdater || isUserTldAdmin"> | </span>
 

@@ -371,6 +371,66 @@
       </div>
       <!-- END TLD: ownerFreeMint -->
 
+      <!-- Minter: add NFT address to whitelist -->
+      <div v-if="isUserMinterAdmin">
+        <h3>Minter contract: add NFT address to whitelist</h3>
+
+        <p>NFT holders will be able to mint one domain per NFT for free.</p>
+
+        <div class="row mt-5">
+          <div class="col-md-6 offset-md-3">
+            <input 
+              v-model="whitelistAddNftAddress"
+              class="form-control text-center border-2 border-light"
+              placeholder="Enter a new whitelisted NFT address"
+            >
+          </div>
+        </div>
+
+        <button 
+          v-if="isActivated" 
+          class="btn btn-primary btn-lg mt-3" 
+          @click="addAddressToWhitelist" 
+          :disabled="waitingAaw"
+        >
+          <span v-if="waitingAaw" class="spinner-border spinner-border-sm mx-1" role="status" aria-hidden="true"></span>
+          <span>Add to whitelist</span>
+        </button>
+
+        <hr />
+      </div>
+      <!-- END Minter: add NFT address to whitelist -->
+
+      <!-- Minter: remove NFT address from whitelist -->
+      <div v-if="isUserMinterAdmin">
+        <h3>Minter contract: remove NFT address from whitelist</h3>
+
+        <p>NFT holders will NOT be able to mint one domain per NFT for free anymore.</p>
+
+        <div class="row mt-5">
+          <div class="col-md-6 offset-md-3">
+            <input 
+              v-model="whitelistRemoveNftAddress"
+              class="form-control text-center border-2 border-light"
+              placeholder="Enter a whitelisted NFT address to remove"
+            >
+          </div>
+        </div>
+
+        <button 
+          v-if="isActivated" 
+          class="btn btn-primary btn-lg mt-3" 
+          @click="removeAddressFromWhitelist" 
+          :disabled="waitingRaw"
+        >
+          <span v-if="waitingRaw" class="spinner-border spinner-border-sm mx-1" role="status" aria-hidden="true"></span>
+          <span>Remove from whitelist</span>
+        </button>
+
+        <hr />
+      </div>
+      <!-- END Minter: remove NFT address from whitelist -->
+
     </div>
   </div>
 </div>
@@ -402,6 +462,7 @@ export default {
       newPrice4: null,
       newPrice5: null,
       newReferralFee: null,
+      waitingAaw: false, // waiting for TX to complete
       waitingCma: false, // waiting for TX to complete
       waitingCmia: false, // waiting for TX to complete
       waitingMfd: false,
@@ -411,9 +472,12 @@ export default {
       waitingPrice3: false, // waiting for TX to complete
       waitingPrice4: false, // waiting for TX to complete
       waitingPrice5: false, // waiting for TX to complete
+      waitingRaw: false, // waiting for TX to complete
       waitingRf: false, // waiting for TX to complete
       waitingTmo: false, // waiting for TX to complete
       waitingTdo: false, // waiting for TX to complete
+      whitelistAddNftAddress: null,
+      whitelistRemoveNftAddress: null,
     }
   },
 
@@ -426,6 +490,59 @@ export default {
 
   methods: {
     ...mapActions("tld", ["fetchMinterContractData"]),
+
+    async addAddressToWhitelist() {
+      this.waitingAaw = true;
+
+      // minter contract (with signer)
+      const minterIntfc = new ethers.utils.Interface([
+        "function addWhitelistedNft(address _nftAddress) external"
+      ]);
+      const minterContractSigner = new ethers.Contract(this.getMinterAddress, minterIntfc, this.signer);
+
+      try {
+        const tx = await minterContractSigner.addWhitelistedNft(this.whitelistAddNftAddress);
+
+        const toastWait = this.toast(
+          {
+            component: WaitingToast,
+            props: {
+              text: "Please wait for your transaction to confirm. Click on this notification to see transaction in the block explorer."
+            }
+          },
+          {
+            type: TYPE.INFO,
+            onClick: () => window.open(this.getBlockExplorerBaseUrl+"/tx/"+tx.hash, '_blank').focus()
+          }
+        );
+
+        const receipt = await tx.wait();
+
+        if (receipt.status === 1) {
+          this.toast.dismiss(toastWait);
+          this.toast("You have successfully added NFT address to the whitelist!", {
+            type: TYPE.SUCCESS,
+            onClick: () => window.open(this.getBlockExplorerBaseUrl+"/tx/"+tx.hash, '_blank').focus()
+          });
+          this.waitingAaw = false;
+        } else {
+          this.toast.dismiss(toastWait);
+          this.toast("Transaction has failed.", {
+            type: TYPE.ERROR,
+            onClick: () => window.open(this.getBlockExplorerBaseUrl+"/tx/"+tx.hash, '_blank').focus()
+          });
+          console.log(receipt);
+          this.waitingAaw = false;
+        }
+
+      } catch (e) {
+        console.log(e)
+        this.waitingAaw = false;
+        this.toast(e.message, {type: TYPE.ERROR});
+      }
+
+      this.waitingAaw = false;
+    },
 
     async changeMetadataAddress() {
       this.waitingCma = true;
@@ -771,6 +888,59 @@ export default {
         this.toast(e.message, {type: TYPE.ERROR});
       }
       this.waitingMfd = false;
+    },
+
+    async removeAddressFromWhitelist() {
+      this.waitingRaw = true;
+
+      // minter contract (with signer)
+      const minterIntfc = new ethers.utils.Interface([
+        "function removeWhitelistedNft(address _nftAddress) external"
+      ]);
+      const minterContractSigner = new ethers.Contract(this.getMinterAddress, minterIntfc, this.signer);
+
+      try {
+        const tx = await minterContractSigner.removeWhitelistedNft(this.whitelistRemoveNftAddress);
+
+        const toastWait = this.toast(
+          {
+            component: WaitingToast,
+            props: {
+              text: "Please wait for your transaction to confirm. Click on this notification to see transaction in the block explorer."
+            }
+          },
+          {
+            type: TYPE.INFO,
+            onClick: () => window.open(this.getBlockExplorerBaseUrl+"/tx/"+tx.hash, '_blank').focus()
+          }
+        );
+
+        const receipt = await tx.wait();
+
+        if (receipt.status === 1) {
+          this.toast.dismiss(toastWait);
+          this.toast("You have successfully removed NFT address from the whitelist!", {
+            type: TYPE.SUCCESS,
+            onClick: () => window.open(this.getBlockExplorerBaseUrl+"/tx/"+tx.hash, '_blank').focus()
+          });
+          this.waitingRaw = false;
+        } else {
+          this.toast.dismiss(toastWait);
+          this.toast("Transaction has failed.", {
+            type: TYPE.ERROR,
+            onClick: () => window.open(this.getBlockExplorerBaseUrl+"/tx/"+tx.hash, '_blank').focus()
+          });
+          console.log(receipt);
+          this.waitingRaw = false;
+        }
+
+      } catch (e) {
+        console.log(e)
+        this.waitingRaw = false;
+        this.toast(e.message, {type: TYPE.ERROR});
+      }
+
+      this.waitingRaw = false;
     },
 
     async togglePaused() {

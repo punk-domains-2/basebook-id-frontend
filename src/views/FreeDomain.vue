@@ -1,12 +1,10 @@
 <template>
   <div class="container text-center">
-    <img class="img-fluid main-img rounded" src="../assets/logo.svg" />
 
     <div class="text-align-header mt-4 mb-2">
-      <h1>Mint your {{getTldName}} web3 username!</h1>
+      <h1>Mint a {{getTldName}} name for free!</h1>
       <p>
-        And start chatting with other L2 enthusiasts on 
-        <a href="https://basebook.xyz" target="_blank">Basebook.xyz</a>!
+        If you hold a whitelisted NFT.
       </p>
     </div>
 
@@ -35,7 +33,7 @@
 
     <div class="text-align-header">
       <p class="mt-5 price-text">
-          Domain price: {{Number(getPrice).toFixed(4)}} {{getPaymentTokenName}}
+          5+ char domain price: FREE
       </p>
     </div>
 
@@ -52,31 +50,22 @@
 
     <!-- Not eligible -->
     <button 
-      v-if="isActivated && isNetworkSupported && !getMinterPaused && !getCanUserBuy && !getMinterLoadingData" 
+      v-if="isActivated && isNetworkSupported && !getMinterPaused && !isEligible && !getMinterLoadingData" 
       class="btn btn-primary btn-lg mt-3 buy-button" 
-      :disabled="waiting || buyNotValid(chosenDomainName).invalid || !hasUserEnoughTokens"
+      disabled="true"
     >
       <span>Not eligible</span>
     </button>
 
-    <!-- Too low ETH balance -->
+    <!-- Mint free domain -->
     <button 
-      v-if="isActivated && isNetworkSupported && !getMinterPaused && !hasUserEnoughTokens && getCanUserBuy && !getMinterLoadingData" 
+      v-if="isActivated && isNetworkSupported && getCanUserBuy && isEligible && !getMinterPaused && !getMinterLoadingData" 
       class="btn btn-primary btn-lg mt-3 buy-button" 
-      :disabled="waiting || buyNotValid(chosenDomainName).invalid || !hasUserEnoughTokens"
-    >
-      <span>Your {{getPaymentTokenName}} balance is too low</span>
-    </button>
-
-    <!-- Buy domain -->
-    <button 
-      v-if="isActivated && isNetworkSupported && getCanUserBuy && !getMinterPaused && hasUserEnoughTokens && !getMinterLoadingData" 
-      class="btn btn-primary btn-lg mt-3 buy-button" 
-      @click="buyDomain" 
-      :disabled="waiting || buyNotValid(chosenDomainName).invalid || !hasUserEnoughTokens"
+      @click="mintFreeDomain" 
+      :disabled="waiting || buyNotValid(chosenDomainName).invalid || !isCorrectLength"
     >
       <span v-if="waiting" class="spinner-border spinner-border-sm mx-1" role="status" aria-hidden="true"></span>
-      <span>Buy domain</span>
+      <span>Mint free domain</span>
     </button>
 
     <!-- Connect Wallet -->
@@ -84,41 +73,6 @@
 
     <div v-if="isActivated && !isNetworkSupported" class="mt-4">
       <button class="btn btn-primary btn-lg btn-Disconnected" @click="changeNetwork(this.getTldChainName)">Switch to {{getTldChainName}}</button>
-    </div>
-
-    <div class="row mt-5">
-      <div class="col-md-6 offset-md-3 table-container">
-        <table class="table table-borderless table-ppl">
-          <thead class="table-light">
-            <tr>
-              <th scope="col">Name length</th>
-              <th scope="col">Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>1 character</td>
-              <td>{{Number(getMinterTldPrice1).toFixed(0)}} {{getPaymentTokenName}}</td>
-            </tr>
-            <tr>
-              <td>2 characters</td>
-              <td>{{Number(getMinterTldPrice2).toFixed(0)}} {{getPaymentTokenName}}</td>
-            </tr>
-            <tr>
-              <td>3 characters</td>
-              <td>{{Number(getMinterTldPrice3).toFixed(1)}} {{getPaymentTokenName}}</td>
-            </tr>
-            <tr>
-              <td>4 characters</td>
-              <td>{{Number(getMinterTldPrice4).toFixed(3)}} {{getPaymentTokenName}}</td>
-            </tr>
-            <tr>
-              <td>5+ characters</td>
-              <td>{{Number(getMinterTldPrice5).toFixed(3)}} {{getPaymentTokenName}}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
     </div>
     
   </div>
@@ -136,15 +90,15 @@ import WaitingToast from "../components/toasts/WaitingToast.vue";
 import Referral from '../components/Referral.vue';
 import useDomainHelpers from "../hooks/useDomainHelpers";
 import useChainHelpers from "../hooks/useChainHelpers";
-import MinterAbi from "../abi/Minter.json";
 
 export default {
-  name: "Home",
+  name: "FreeDomain",
 
   data() {
     return {
       chosenDomainName: null,
       chosenAllowance: null,
+      isEligible: false,
       loading: false, // loading data
       waiting: false, // waiting for TX to complete
       minterContract: null
@@ -155,36 +109,25 @@ export default {
     Referral
   },
 
+  mounted() {
+    if (this.isActivated) {
+      this.checkEligibility();
+    }
+  },
+
   computed: {
     ...mapGetters("user", ["getPaymentTokenAddress", "getPaymentTokenName", "getPaymentTokenAllowance", "getUserBalance", "getCanUserBuy", "getDiscountEligible"]),
     ...mapGetters("network", ["getBlockExplorerBaseUrl"]),
-    ...mapGetters("tld", ["getTldChainId", "getTldChainName", "getMinterAddress", "getTldContract", "getMinterLoadingData", "getMinterTldPrice1", "getMinterTldPrice2", "getMinterTldPrice3", "getMinterTldPrice4", "getMinterTldPrice5", "getMinterPaused", "getMinterDiscountPercentage", "getTldName"]),
-
-    getPrice() {
-      if (this.chosenDomainName) {
-        if (this.chosenDomainName.match(/./gu).length === 1) {
-          return this.getMinterTldPrice1;
-        } else if (this.chosenDomainName.match(/./gu).length === 2) {
-          return this.getMinterTldPrice2;
-        } else if (this.chosenDomainName.match(/./gu).length === 3) {
-          return this.getMinterTldPrice3;
-        } else if (this.chosenDomainName.match(/./gu).length === 4) {
-          return this.getMinterTldPrice4;
-        }
-      }
-      
-      return this.getMinterTldPrice5;
-    },
+    ...mapGetters("tld", ["getTldChainId", "getTldChainName", "getMinterAddress", "getTldContract", "getMinterLoadingData", "getMinterPaused", "getTldName"]),
 
     domainLowerCase() {
       return this.chosenDomainName.toLowerCase();
     },
 
-    hasUserEnoughTokens() {
-      if (this.address && Number(this.getUserBalance) > 0) {
-        if (Number(this.getUserBalance) >= Number(this.getPrice)) {
-          return true;
-        }
+    isCorrectLength() {
+      // domain must be 5 chars or longer
+      if (this.chosenDomainName) {
+        return this.chosenDomainName.length >= 5;
       }
 
       return false;
@@ -205,7 +148,22 @@ export default {
     ...mapActions("user", ["fetchCanUserBuy", "getPaymentTokenDecimals"]),
     ...mapMutations("user", ["addDomainManually", "setPaymentTokenAllowance"]),
 
-    async buyDomain() {
+    async checkEligibility() {
+      // check if user is eligible for a free domain
+      this.loading = true;
+
+      const minterInterface = new ethers.utils.Interface([
+        "function canMintFree(address user_) public view returns(bool)"
+      ]);
+
+      const minterContract = new ethers.Contract(this.getMinterAddress, minterInterface, this.signer);
+
+      this.isEligible = await minterContract.canMintFree(this.address);
+
+      this.loading = false;
+    },
+
+    async mintFreeDomain() {
       this.waiting = true;
       const fullDomainName = this.domainLowerCase + this.getTldName;
 
@@ -219,7 +177,10 @@ export default {
       }
 
       // wrapper contract (with signer)
-      const wrapperIntfc = new ethers.utils.Interface(MinterAbi);
+      const wrapperIntfc = new ethers.utils.Interface([
+        "function canMintFree(address user_) public view returns(bool)",
+        "function mintFreeDomain(string memory _domainName, address _domainHolder) external nonReentrant returns(uint256)"
+      ]);
       const minterContractSigner = new ethers.Contract(this.getMinterAddress, wrapperIntfc, this.signer);
 
       try {
@@ -229,13 +190,9 @@ export default {
           referral = ethers.constants.AddressZero;
         }
 
-        const tx = await minterContractSigner.mint(
+        const tx = await minterContractSigner.mintFreeDomain(
           this.domainLowerCase,
-          this.address,
-          referral,
-          {
-            value: ethers.utils.parseEther(String(this.getPrice))
-          }
+          this.address
         );
 
         const toastWait = this.toast(
@@ -255,11 +212,14 @@ export default {
 
         if (receipt.status === 1) {
           this.toast.dismiss(toastWait);
-          this.toast("You have successfully bought the domain!", {
+          this.toast("You have successfully claimed a free domain!", {
             type: TYPE.SUCCESS,
             onClick: () => window.open(this.getBlockExplorerBaseUrl+"/tx/"+tx.hash, '_blank').focus()
           });
           this.addDomainManually(fullDomainName);
+
+          this.isEligible = await minterContractSigner.canMintFree(this.address);
+
           this.waiting = false;
         } else {
           this.toast.dismiss(toastWait);
@@ -299,6 +259,14 @@ export default {
     const { switchNetwork } = useChainHelpers();
 
     return { address, buyNotValid, chainId, isActivated, open, signer, switchNetwork, toast }
+  },
+
+  watch: {
+    isActivated() {
+      if (this.isActivated) {
+        this.checkEligibility();
+      }
+    }
   }
 }
 </script>

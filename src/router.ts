@@ -12,6 +12,7 @@ import ProfileSendTokens from './views/ProfileSendTokens.vue'
 import SearchDomains from './views/SearchDomains.vue'
 import SendTokens from './views/SendTokens.vue'
 import TransferDomain from './views/TransferDomain.vue'
+import FreeDomain from './views/FreeDomain.vue'
 
 // For info on using Vue Router with the Composition API, see https://next.router.vuejs.org/guide/advanced/composition-api.html
 
@@ -46,6 +47,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'DomainDetails',
     component: DomainDetails,
     props: true
+  },
+  {
+    path: '/free-domain',
+    name: 'FreeDomain',
+    component: FreeDomain,
   },
   {
     path: '/how',

@@ -98,23 +98,23 @@
           <tbody>
             <tr>
               <td>1 character</td>
-              <td>{{Number(getMinterTldPrice1).toFixed(0)}} {{getPaymentTokenName}}</td>
+              <td>{{this.getFormattedPrice(getMinterTldPrice1)}} {{getPaymentTokenName}}</td>
             </tr>
             <tr>
               <td>2 characters</td>
-              <td>{{Number(getMinterTldPrice2).toFixed(0)}} {{getPaymentTokenName}}</td>
+              <td>{{this.getFormattedPrice(getMinterTldPrice2)}} {{getPaymentTokenName}}</td>
             </tr>
             <tr>
               <td>3 characters</td>
-              <td>{{Number(getMinterTldPrice3).toFixed(1)}} {{getPaymentTokenName}}</td>
+              <td>{{this.getFormattedPrice(getMinterTldPrice3)}} {{getPaymentTokenName}}</td>
             </tr>
             <tr>
               <td>4 characters</td>
-              <td>{{Number(getMinterTldPrice4).toFixed(3)}} {{getPaymentTokenName}}</td>
+              <td>{{this.getFormattedPrice(getMinterTldPrice4)}} {{getPaymentTokenName}}</td>
             </tr>
             <tr>
               <td>5+ characters</td>
-              <td>{{Number(getMinterTldPrice5).toFixed(3)}} {{getPaymentTokenName}}</td>
+              <td>{{this.getFormattedPrice(getMinterTldPrice5)}} {{getPaymentTokenName}}</td>
             </tr>
           </tbody>
         </table>
@@ -288,6 +288,21 @@ export default {
         params: networkData.params
       });
     },
+
+    getFormattedPrice(price) {
+      // if price is less than 0.001, show 6 decimals etc.
+      if (price < 0.001) {
+        return Number(price).toFixed(6);
+      } else if (price < 0.01) {
+        return Number(price).toFixed(4);
+      } else if (price < 0.1) {
+        return Number(price).toFixed(3);
+      } else if (price < 1) {
+        return Number(price).toFixed(3);
+      } else if (price < 10) {
+        return Number(price).toFixed(3);
+      }
+    }
 
   },
 
